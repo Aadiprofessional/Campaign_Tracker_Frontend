@@ -6,6 +6,8 @@ interface PageProps {
   params: { id: string };
 }
 
+export const runtime = 'edge';
+
 export default async function EditCampaignPage({ params }: PageProps) {
   try {
     const campaign = await api.getCampaign(params.id);
