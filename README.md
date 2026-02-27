@@ -83,6 +83,37 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 3. Add environment variables (e.g., `NEXT_PUBLIC_API_URL`).
 4. Deploy.
 
+### Cloudflare Pages
+
+This project is configured for deployment on Cloudflare Pages using `@cloudflare/next-on-pages`.
+
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Build for Cloudflare**:
+   ```bash
+   npm run pages:build
+   ```
+
+3. **Deploy**:
+   Connect your repository to Cloudflare Pages and use the following settings:
+   - **Build command**: `npm run pages:build` (or `npx @cloudflare/next-on-pages`)
+   - **Build output directory**: `.vercel/output/static`
+   - **Compatibility flags**: `nodejs_compat`
+
+   Alternatively, deploy via CLI:
+   ```bash
+   npm run pages:deploy
+   ```
+
+   **Note on Telemetry**:
+   To disable Next.js telemetry during build, set the environment variable:
+   `NEXT_TELEMETRY_DISABLED=1`
+   
+   In Cloudflare Pages dashboard: Settings -> Environment Variables -> Add variable.
+
 ### Google Cloud Platform (Cloud Run)
 
 You can containerize and deploy this application to Google Cloud Run.
