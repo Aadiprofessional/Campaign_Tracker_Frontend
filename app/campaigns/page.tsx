@@ -1,6 +1,9 @@
 import { CampaignsTable } from '@/components/campaigns/CampaignsTable';
+import { api } from '@/lib/api';
 
-export default function CampaignsPage() {
+export default async function CampaignsPage() {
+  const campaigns = await api.getCampaigns();
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -10,7 +13,7 @@ export default function CampaignsPage() {
         </div>
       </div>
       
-      <CampaignsTable />
+      <CampaignsTable initialCampaigns={campaigns} />
     </div>
   );
 }

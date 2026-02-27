@@ -1,6 +1,7 @@
 'use client';
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useState } from 'react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface PerformanceChartProps {
@@ -13,6 +14,16 @@ interface PerformanceChartProps {
 }
 
 export function PerformanceChart({ data }: PerformanceChartProps) {
+  const [hiddenSeries, setHiddenSeries] = useState<string[]>([]);
+
+  const toggleSeries = (dataKey: string) => {
+    setHiddenSeries(prev => 
+      prev.includes(dataKey) 
+        ? prev.filter(key => key !== dataKey)
+        : [...prev, dataKey]
+    );
+  };
+
   return (
     <Card className="bg-[#111111]/80 backdrop-blur-sm border-[#2A2A2A] h-full">
       <CardHeader>
@@ -21,7 +32,7 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
       <CardContent>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
+            <AreaChart
               data={data}
               margin={{
                 top: 5,
@@ -30,6 +41,20 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
                 bottom: 5,
               }}
             >
+              <defs>
+                <linearGradient id="colorImpressions" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#F97316" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#F97316" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#FFFFFF" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#FFFFFF" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorConversions" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#22C55E" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" vertical={false} />
               <XAxis 
                 dataKey="name" 
@@ -45,6 +70,7 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
                 axisLine={false}
               />
               <Tooltip 
+                cursor={{ stroke: '#2A2A2A', strokeWidth: 1 }}
                 contentStyle={{ 
                   backgroundColor: '#1A1A1A', 
                   border: '1px solid #2A2A2A',
@@ -53,35 +79,46 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
                 }}
                 itemStyle={{ color: '#FFFFFF' }}
               />
-              <Legend wrapperStyle={{ paddingTop: '20px' }} />
-              <Line 
+              <Legend 
+                wrapperStyle={{ paddingTop: '20px', cursor: 'pointer' }}
+                onClick={(e) => toggleSeries(e.dataKey as string)}
+                formatter={(value, entry: any) => (
+                  <span style={{ 
+                    color: hiddenSeries.includes(entry.dataKey) ? '#666' : '#fff',
+                    textDecoration: hiddenSeries.includes(entry.dataKey) ? 'line-through' : 'none'
+                  }}>
+                    {value}
+                  </span>
+                )}
+              />
+              <Area 
                 type="monotone" 
                 dataKey="impressions" 
                 stroke="#F97316" 
-                strokeWidth={2}
-                dot={{ fill: '#F97316', r: 4 }}
-                activeDot={{ r: 6, strokeWidth: 0 }}
+                fillOpacity={1}
+                fill="url(#colorImpressions)"
                 name="Impressions"
+                hide={hiddenSeries.includes('impressions')}
               />
-              <Line 
+              <Area 
                 type="monotone" 
                 dataKey="clicks" 
                 stroke="#FFFFFF" 
-                strokeWidth={2}
-                dot={{ fill: '#FFFFFF', r: 4 }}
-                activeDot={{ r: 6, strokeWidth: 0 }}
+                fillOpacity={1}
+                fill="url(#colorClicks)"
                 name="Clicks"
+                hide={hiddenSeries.includes('clicks')}
               />
-              <Line 
+              <Area 
                 type="monotone" 
                 dataKey="conversions" 
                 stroke="#22C55E" 
-                strokeWidth={2}
-                dot={{ fill: '#22C55E', r: 4 }}
-                activeDot={{ r: 6, strokeWidth: 0 }}
+                fillOpacity={1}
+                fill="url(#colorConversions)"
                 name="Conversions"
+                hide={hiddenSeries.includes('conversions')}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </CardContent>

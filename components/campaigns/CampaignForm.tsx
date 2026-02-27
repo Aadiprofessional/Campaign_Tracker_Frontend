@@ -14,8 +14,10 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Campaign, Platform, Status, Goal } from '@/lib/mockData';
+import { Campaign, Platform, Status, Goal } from '@/lib/types';
 import Link from 'next/link';
+import { api } from '@/lib/api';
+import { toast } from "sonner";
 
 interface CampaignFormProps {
   initialData?: Campaign;
@@ -24,6 +26,7 @@ interface CampaignFormProps {
 
 export function CampaignForm({ initialData, mode }: CampaignFormProps) {
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Partial<Campaign>>(
     initialData || {
       name: '',
@@ -31,6 +34,7 @@ export function CampaignForm({ initialData, mode }: CampaignFormProps) {
       status: 'Draft',
       budget: 0,
       amountSpent: 0,
+      roi: 0,
       startDate: '',
       endDate: '',
       targetAudience: '',
@@ -43,7 +47,9 @@ export function CampaignForm({ initialData, mode }: CampaignFormProps) {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'budget' || name === 'amountSpent' ? Number(value) : value
+      [name]: ['budget', 'amountSpent', 'roi'].includes(name) 
+        ? Number(value) 
+        : value
     }));
   };
 
@@ -54,11 +60,25 @@ export function CampaignForm({ initialData, mode }: CampaignFormProps) {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // In a real app, this would call an API
-    router.push('/campaigns');
+    setIsSubmitting(true);
+    try {
+      if (mode === 'create') {
+        await api.createCampaign(formData);
+        toast.success("Campaign created successfully");
+      } else if (mode === 'edit' && initialData?.id) {
+        await api.updateCampaign(initialData.id, formData);
+        toast.success("Campaign updated successfully");
+      }
+      router.push('/campaigns');
+      router.refresh();
+    } catch (error) {
+      console.error('Failed to save campaign:', error);
+      toast.error("Failed to save campaign");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -66,7 +86,6 @@ export function CampaignForm({ initialData, mode }: CampaignFormProps) {
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Row 1: Name & Platform */}
             <div className="space-y-2">
               <Label htmlFor="name" className="text-xs text-white">Campaign Name</Label>
               <Input
@@ -99,7 +118,6 @@ export function CampaignForm({ initialData, mode }: CampaignFormProps) {
               </Select>
             </div>
 
-            {/* Row 2: Goal & Status */}
             <div className="space-y-2">
               <Label htmlFor="goal" className="text-xs text-white">Goal</Label>
               <Select 
@@ -137,36 +155,51 @@ export function CampaignForm({ initialData, mode }: CampaignFormProps) {
               </Select>
             </div>
 
-            {/* Row 3: Budget & Amount Spent */}
-            <div className="space-y-2">
-              <Label htmlFor="budget" className="text-xs text-white">Budget ($)</Label>
-              <Input
-                id="budget"
-                name="budget"
-                type="number"
-                value={formData.budget}
-                onChange={handleChange}
-                className="bg-[#1A1A1A] border-[#2A2A2A] focus-visible:ring-orange-500 text-white"
-                min="0"
-                required
-              />
+            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="budget" className="text-xs text-white">Budget ($)</Label>
+                <Input
+                  id="budget"
+                  name="budget"
+                  type="number"
+                  value={formData.budget}
+                  onChange={handleChange}
+                  className="bg-[#1A1A1A] border-[#2A2A2A] focus-visible:ring-orange-500 text-white"
+                  min="0"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="amountSpent" className="text-xs text-white">Amount Spent ($)</Label>
+                <Input
+                  id="amountSpent"
+                  name="amountSpent"
+                  type="number"
+                  value={formData.amountSpent}
+                  onChange={handleChange}
+                  className="bg-[#1A1A1A] border-[#2A2A2A] focus-visible:ring-orange-500 text-white"
+                  min="0"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="roi" className="text-xs text-white">ROI (x)</Label>
+                <Input
+                  id="roi"
+                  name="roi"
+                  type="number"
+                  value={formData.roi}
+                  onChange={handleChange}
+                  className="bg-[#1A1A1A] border-[#2A2A2A] focus-visible:ring-orange-500 text-white"
+                  min="0"
+                  step="0.01"
+                  required
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="amountSpent" className="text-xs text-white">Amount Spent ($)</Label>
-              <Input
-                id="amountSpent"
-                name="amountSpent"
-                type="number"
-                value={formData.amountSpent}
-                onChange={handleChange}
-                className="bg-[#1A1A1A] border-[#2A2A2A] focus-visible:ring-orange-500 text-white"
-                min="0"
-                required
-              />
-            </div>
-
-            {/* Row 4: Dates */}
             <div className="space-y-2">
               <Label htmlFor="startDate" className="text-xs text-white">Start Date</Label>
               <Input
@@ -193,7 +226,6 @@ export function CampaignForm({ initialData, mode }: CampaignFormProps) {
               />
             </div>
 
-            {/* Row 5: Target Audience */}
             <div className="md:col-span-2 space-y-2">
               <Label htmlFor="targetAudience" className="text-xs text-white">Target Audience</Label>
               <Input
@@ -207,7 +239,6 @@ export function CampaignForm({ initialData, mode }: CampaignFormProps) {
               />
             </div>
 
-            {/* Row 6: Description */}
             <div className="md:col-span-2 space-y-2">
               <Label htmlFor="description" className="text-xs text-white">Description</Label>
               <Textarea
@@ -226,8 +257,15 @@ export function CampaignForm({ initialData, mode }: CampaignFormProps) {
             <Button variant="ghost" asChild className="text-gray-400 hover:text-white hover:bg-[#2A2A2A]">
               <Link href="/campaigns">Cancel</Link>
             </Button>
-            <Button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)] transition-shadow">
-              {mode === 'create' ? 'Create Campaign' : 'Save Changes'}
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="bg-orange-500 hover:bg-orange-600 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)] transition-shadow"
+            >
+              {isSubmitting 
+                ? (mode === 'create' ? 'Creating...' : 'Saving...') 
+                : (mode === 'create' ? 'Create Campaign' : 'Save Changes')
+              }
             </Button>
           </div>
         </form>

@@ -1,178 +1,197 @@
-# API Documentation for Campaign Tracker
+# Campaign Tracker API Documentation
 
-This document outlines the API endpoints and data structures required to power the Campaign Tracker frontend. These endpoints should be implemented in the Python backend (Django/FastAPI).
+This document outlines the API endpoints required to support the Campaign Tracker frontend, including the Dashboard, Campaigns management, and the new Monthly Performance tracking features.
 
-## 1. Core Entity: Campaign
-
-### Data Structure (JSON)
-```json
-{
-  "id": "uuid-string",
-  "name": "string",
-  "description": "string",
-  "platform": "enum('Google Ads', 'Facebook', 'Instagram', 'LinkedIn', 'Email')",
-  "status": "enum('Active', 'Paused', 'Completed', 'Draft')",
-  "budget": "number (float)",
-  "amount_spent": "number (float)",
-  "start_date": "date (YYYY-MM-DD)",
-  "end_date": "date (YYYY-MM-DD)",
-  "target_audience": "string",
-  "goal": "enum('Brand Awareness', 'Lead Generation', 'Sales', 'Traffic', 'Engagement')",
-  "roi": "number (float)",
-  "created_at": "datetime (ISO 8601)"
-}
-```
+**Base URL**: `https://campaign-tracker-backend-eight.vercel.app/api`
 
 ---
 
-## 2. API Endpoints
+## 1. Dashboard
 
-### A. Campaign Management (CRUD)
+### Get Dashboard Statistics
+Returns aggregated statistics for the main dashboard cards.
 
-#### 1. List Campaigns
-- **Endpoint**: `GET /api/campaigns/`
-- **Query Parameters**:
-  - `search`: string (filters by name)
-  - `status`: string (filter by status)
-  - `platform`: string (filter by platform)
-  - `page`: integer (pagination)
-  - `limit`: integer (items per page, default 10)
+- **Endpoint**: `/dashboard/stats/`
+- **Method**: `GET`
 - **Response**:
   ```json
   {
-    "count": 24,
-    "next": "http://api.example.com/campaigns/?page=2",
-    "previous": null,
-    "results": [
-      {
-        "id": "1",
-        "name": "Summer Sale 2024",
-        "platform": "Instagram",
-        "status": "Active",
-        "budget": 5000,
-        "amount_spent": 2150,
-        "roi": 3.5,
-        "start_date": "2024-06-01",
-        "end_date": "2024-08-31"
-      }
-      // ... more items
-    ]
+    "total_campaigns": 15,
+    "active_campaigns": 8,
+    "total_budget": 50000,
+    "avg_roi": 12.5
   }
   ```
 
-#### 2. Create Campaign
-- **Endpoint**: `POST /api/campaigns/`
+### Get Performance Metrics (Optional/Optimized)
+*Note: The frontend currently aggregates this from individual campaign performance data, but a dedicated endpoint is recommended for performance.*
+
+- **Endpoint**: `/dashboard/performance/`
+- **Method**: `GET`
+- **Response**:
+  ```json
+  [
+    {
+      "name": "Summer Sale 2024",
+      "impressions": 15000,
+      "clicks": 3200,
+      "conversions": 450
+    }
+  ]
+  ```
+
+---
+
+## 2. Campaigns Management
+
+### Get All Campaigns
+Retrieves a list of all campaigns.
+
+- **Endpoint**: `/campaigns/`
+- **Method**: `GET`
+- **Response**: Array of Campaign objects.
+  ```json
+  [
+    {
+      "id": "1",
+      "name": "Q1 Marketing",
+      "platform": "Google Ads",
+      "status": "Active",
+      "budget": 5000,
+      "amount_spent": 1200,
+      "start_date": "2024-01-01",
+      "end_date": "2024-03-31",
+      "target_audience": "Tech enthusiasts",
+      "goal": "Sales",
+      "created_at": "2023-12-25T10:00:00Z"
+    }
+  ]
+  ```
+
+### Get Single Campaign
+Retrieves details for a specific campaign.
+
+- **Endpoint**: `/campaigns/{id}/`
+- **Method**: `GET`
+- **Response**: Single Campaign object (same structure as above).
+
+### Create Campaign
+Creates a new campaign.
+
+- **Endpoint**: `/campaigns/`
+- **Method**: `POST`
 - **Body**:
   ```json
   {
     "name": "New Campaign",
-    "description": "Campaign description...",
-    "platform": "Google Ads",
+    "platform": "Facebook",
     "status": "Draft",
     "budget": 1000,
-    "amount_spent": 0,
-    "start_date": "2024-10-01",
-    "end_date": "2024-12-31",
-    "target_audience": "Young Adults",
-    "goal": "Traffic"
-  }
-  ```
-- **Response**: `201 Created` with the full Campaign object.
-
-#### 3. Retrieve Campaign Detail
-- **Endpoint**: `GET /api/campaigns/{id}/`
-- **Response**: `200 OK` with the full Campaign object.
-
-#### 4. Update Campaign
-- **Endpoint**: `PUT /api/campaigns/{id}/` or `PATCH /api/campaigns/{id}/`
-- **Body**: Partial or full Campaign object.
-- **Response**: `200 OK` with the updated Campaign object.
-
-#### 5. Delete Campaign
-- **Endpoint**: `DELETE /api/campaigns/{id}/`
-- **Response**: `204 No Content`
-
----
-
-### B. Dashboard & Analytics
-
-#### 1. Dashboard Statistics
-- **Endpoint**: `GET /api/dashboard/stats/`
-- **Response**:
-  ```json
-  {
-    "total_campaigns": 24,
-    "active_campaigns": 12,
-    "total_budget": 85000,
-    "avg_roi": 3.2
+    "start_date": "2024-06-01",
+    "end_date": "2024-06-30",
+    "target_audience": "Gen Z",
+    "goal": "Brand Awareness"
   }
   ```
 
-#### 2. Monthly Performance (Dashboard Chart)
-- **Endpoint**: `GET /api/dashboard/performance/`
+### Update Campaign
+Updates an existing campaign.
+
+- **Endpoint**: `/campaigns/{id}/`
+- **Method**: `PATCH`
+- **Body**: Partial Campaign object (e.g., just status or budget).
+  ```json
+  {
+    "status": "Active",
+    "budget": 1500
+  }
+  ```
+
+### Delete Campaign
+Removes a campaign.
+
+- **Endpoint**: `/campaigns/{id}/`
+- **Method**: `DELETE`
+
+---
+
+## 3. Monthly Performance (New)
+
+These endpoints manage the granular monthly data for each campaign, which powers the ROI calculations and performance charts.
+
+### Get Monthly Performance
+Retrieves the list of monthly performance records for a specific campaign.
+
+- **Endpoint**: `/campaigns/{id}/performance`
+- **Method**: `GET`
 - **Response**:
   ```json
   [
-    { "name": "Jan", "impressions": 4000, "clicks": 2400, "conversions": 2400 },
-    { "name": "Feb", "impressions": 3000, "clicks": 1398, "conversions": 2210 }
-    // ... more months
+    {
+      "campaignId": "1",
+      "month": "2024-01",
+      "impressions": 5000,
+      "clicks": 200,
+      "conversions": 15,
+      "spend": 1000,
+      "revenue": 3000
+    },
+    {
+      "campaignId": "1",
+      "month": "2024-02",
+      "impressions": 6000,
+      "clicks": 250,
+      "conversions": 20,
+      "spend": 1200,
+      "revenue": 4000
+    }
   ]
   ```
 
-#### 3. Campaign Performance (Detail Page Chart)
-- **Endpoint**: `GET /api/campaigns/{id}/performance/`
-- **Response**:
+### Update Monthly Performance
+Updates the monthly performance records for a campaign. This should replace/upsert the provided records.
+
+- **Endpoint**: `/campaigns/{id}/performance`
+- **Method**: `PUT`
+- **Body**: Array of Monthly Performance objects.
   ```json
   [
-    { "name": "Week 1", "impressions": 1200, "clicks": 800, "conversions": 150 },
-    { "name": "Week 2", "impressions": 1500, "clicks": 950, "conversions": 180 }
-    // ... more weeks
+    {
+      "campaignId": "1",
+      "month": "2024-01",
+      "impressions": 5500,
+      "clicks": 220,
+      "conversions": 18,
+      "spend": 1100,
+      "revenue": 3200
+    }
   ]
   ```
 
 ---
 
-### C. Third-Party Integration (Insights)
+## 4. Insights
 
-This endpoint aggregates data from external sources (e.g., Google Trends, Twitter API, or a mock service) to provide market insights.
+### Get AI Insights
+Retrieves market insights based on a query.
 
-#### 1. Get Market Trends
-- **Endpoint**: `GET /api/insights/trends/`
-- **Query Parameters**:
-  - `query`: string (optional, e.g., "digital marketing")
+- **Endpoint**: `/insights/?query={query}`
+- **Method**: `GET`
 - **Response**:
   ```json
   {
-    "trend_score": 87,
-    "search_volume": "2.4M/month",
+    "trend_score": 85,
+    "search_volume": "High",
     "competition": "Medium",
     "interest_over_time": [
-      { "name": "Jan", "value": 45 },
-      { "name": "Feb", "value": 52 }
-      // ... 12 months data
+      { "name": "Jan", "value": 40 },
+      { "name": "Feb", "value": 65 }
     ],
     "related_keywords": [
-      { "name": "digital marketing trends", "volume": 8500 },
-      { "name": "ai in marketing", "volume": 7200 }
+      { "name": "digital marketing", "volume": 5000 }
     ],
     "trending_topics": [
-      { 
-        "id": 1, 
-        "name": "AI Content Generation", 
-        "category": "Technology", 
-        "score": 92, 
-        "volume": "1.2M" 
-      }
+      { "id": 1, "name": "AI Tools", "category": "Tech", "score": 92, "volume": "10k+" }
     ]
   }
   ```
-
-## 3. Implementation Notes (Backend Task)
-
-1.  **Framework**: Use Django (with Django REST Framework) or FastAPI.
-2.  **Database**: PostgreSQL is required.
-    - Model: `Campaign`
-    - Fields should map to the JSON structure above.
-3.  **Third-Party API**:
-    - For the `GET /api/insights/trends/` endpoint, integrate with a real external API (e.g., NewsAPI, Google Trends via `pytrends`, or OpenAI) OR create a robust mock service if API keys are unavailable.
-4.  **CORS**: Ensure CORS is enabled to allow requests from the Next.js frontend (running on `localhost:3000`).

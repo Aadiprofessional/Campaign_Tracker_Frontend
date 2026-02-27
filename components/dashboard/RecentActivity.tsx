@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Campaign } from '@/lib/mockData';
-import { cn } from '@/lib/utils';
+import { Campaign } from '@/lib/types';
+import { cn, formatDate } from '@/lib/utils';
 
 interface RecentActivityProps {
   campaigns: Campaign[];
@@ -14,7 +14,7 @@ export function RecentActivity({ campaigns }: RecentActivityProps) {
     .map((c, index) => ({
       id: c.id,
       text: `Campaign "${c.name}" was created`,
-      timestamp: new Date(c.createdAt).toLocaleDateString(),
+      timestamp: formatDate(c.createdAt),
     }));
 
   return (
@@ -27,12 +27,10 @@ export function RecentActivity({ campaigns }: RecentActivityProps) {
           {activities.length > 0 ? (
             activities.map((activity, index) => (
               <div key={activity.id} className="relative flex gap-4 items-start">
-                {/* Timeline Line */}
                 {index !== activities.length - 1 && (
                   <div className="absolute left-[5px] top-6 bottom-[-24px] w-[2px] bg-[#1E1E1E]" />
                 )}
                 
-                {/* Dot */}
                 <div className={cn(
                   "mt-1.5 h-3 w-3 rounded-full shrink-0 z-10 ring-4 ring-[#111111]",
                   index === 0 ? "bg-orange-500" : "bg-[#2A2A2A]"

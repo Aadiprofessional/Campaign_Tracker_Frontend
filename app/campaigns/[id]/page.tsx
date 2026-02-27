@@ -1,23 +1,19 @@
 import { notFound } from 'next/navigation';
 import { CampaignDetail } from '@/components/campaigns/CampaignDetail';
-import { campaigns } from '@/lib/mockData';
+import { api } from '@/lib/api';
+import { generateMockPerformanceData } from '@/lib/utils';
 
 interface PageProps {
   params: { id: string };
 }
 
-export function generateStaticParams() {
-  return campaigns.map((campaign) => ({
-    id: campaign.id,
-  }));
-}
-
-export default function CampaignDetailPage({ params }: PageProps) {
-  const campaign = campaigns.find((c) => c.id === params.id);
-
-  if (!campaign) {
+export default async function CampaignDetailPage({ params }: PageProps) {
+  try {
+    const campaign = await api.getCampaign(params.id);
+    const performanceData = await api.getMonthlyPerformance(params.id);
+    
+    return <CampaignDetail campaign={campaign} performanceData={performanceData} />;
+  } catch (error) {
     notFound();
   }
-
-  return <CampaignDetail campaign={campaign} />;
 }

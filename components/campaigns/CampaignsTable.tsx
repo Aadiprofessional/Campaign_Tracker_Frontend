@@ -27,27 +27,83 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from '@/components/ui/pagination';
-import { Pencil, Trash2, Search, Plus } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Pencil, Trash2, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { campaigns, Campaign, Platform, Status } from '@/lib/mockData';
-import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { Campaign, Platform, Status } from '@/lib/types';
+import { cn, formatDate } from '@/lib/utils';
+import { api } from '@/lib/api';
+import { toast } from "sonner";
 
-export function CampaignsTable() {
-  const [searchTerm, setSearchTerm] = useState('');
+interface CampaignsTableProps {
+  initialCampaigns: Campaign[];
+}
+
+export function CampaignsTable({ initialCampaigns }: CampaignsTableProps) {
+  const router = useRouter();
+  const [campaignsList, setCampaignsList] = useState<Campaign[]>(initialCampaigns);
+  
   const [statusFilter, setStatusFilter] = useState<Status | 'All'>('All');
   const [platformFilter, setPlatformFilter] = useState<Platform | 'All'>('All');
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const itemsPerPage = 8;
 
-  // Filter campaigns
-  const filteredCampaigns = campaigns.filter(campaign => {
-    const matchesSearch = campaign.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const handleDelete = async (id: string) => {
+    try {
+      await api.deleteCampaign(id);
+      setCampaignsList(prev => prev.filter(c => c.id !== id));
+      toast.success("Campaign deleted successfully");
+    } catch (error) {
+      console.error('Failed to delete campaign:', error);
+      toast.error("Failed to delete campaign");
+    } finally {
+      setDeleteId(null);
+    }
+  };
+
+  const handleStatusChange = async (id: string, newStatus: Status) => {
+    try {
+      
+      setCampaignsList(prev => prev.map(c => c.id === id ? { ...c, status: newStatus } : c));
+      await api.updateCampaign(id, { status: newStatus });
+      toast.success(`Status updated to ${newStatus}`);
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      
+      const original = campaignsList.find(c => c.id === id);
+      if (original) {
+        setCampaignsList(prev => prev.map(c => c.id === id ? { ...c, status: original.status } : c));
+      }
+      toast.error("Failed to update status");
+    }
+  };
+
+  
+  const filteredCampaigns = campaignsList.filter(campaign => {
     const matchesStatus = statusFilter === 'All' || campaign.status === statusFilter;
     const matchesPlatform = platformFilter === 'All' || campaign.platform === platformFilter;
-    return matchesSearch && matchesStatus && matchesPlatform;
+    return matchesStatus && matchesPlatform;
   });
 
-  // Pagination logic
+  
   const totalPages = Math.ceil(filteredCampaigns.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedCampaigns = filteredCampaigns.slice(startIndex, startIndex + itemsPerPage);
@@ -58,7 +114,7 @@ export function CampaignsTable() {
     }
   };
 
-  // Helper for Platform Badge Color
+  
   const getPlatformColor = (platform: Platform) => {
     switch (platform) {
       case 'Google Ads': return 'bg-blue-500/20 text-blue-500 hover:bg-blue-500/30 border-blue-500/50';
@@ -70,7 +126,7 @@ export function CampaignsTable() {
     }
   };
 
-  // Helper for Status Badge Color
+  
   const getStatusColor = (status: Status) => {
     switch (status) {
       case 'Active': return 'bg-green-500/20 text-green-500 hover:bg-green-500/30 border-green-500/50';
@@ -81,7 +137,7 @@ export function CampaignsTable() {
     }
   };
 
-  // Helper for ROI Color
+  
   const getROIColor = (roi: number) => {
     if (roi > 2) return 'text-green-500';
     if (roi >= 1) return 'text-yellow-500';
@@ -90,21 +146,31 @@ export function CampaignsTable() {
 
   return (
     <div className="space-y-4">
-      {/* Header Row */}
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent className="bg-[#1A1A1A] border-[#2A2A2A] text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              This action cannot be undone. This will permanently delete the campaign.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-[#2A2A2A] text-white hover:bg-[#2A2A2A] hover:text-white">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => deleteId && handleDelete(deleteId)}
+              className="bg-red-500 text-white hover:bg-red-600 border-none"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h2 className="text-xl font-semibold text-white">All Campaigns</h2>
         
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search campaigns..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 bg-[#1A1A1A] border-[#2A2A2A] focus:ring-orange-500 w-full sm:w-[200px]"
-            />
-          </div>
-          
           <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as Status | 'All')}>
             <SelectTrigger className="w-full sm:w-[130px] bg-[#1A1A1A] border-[#2A2A2A]">
               <SelectValue placeholder="Status" />
@@ -140,10 +206,11 @@ export function CampaignsTable() {
         </div>
       </div>
 
-      {/* Table Card */}
+      
       <div className="rounded-xl border border-[#2A2A2A] bg-[#111111]/80 backdrop-blur-sm overflow-hidden">
-        <Table>
-          <TableHeader className="bg-[#1A1A1A]">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-[#1A1A1A]">
             <TableRow className="border-b-[#2A2A2A] hover:bg-[#1A1A1A]">
               <TableHead className="text-gray-400">Campaign Name</TableHead>
               <TableHead className="text-gray-400">Platform</TableHead>
@@ -154,16 +221,14 @@ export function CampaignsTable() {
               <TableHead className="text-gray-400">Dates</TableHead>
               <TableHead className="text-gray-400 text-right">Actions</TableHead>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedCampaigns.length > 0 ? (
-              paginatedCampaigns.map((campaign, index) => (
+            </TableHeader>
+            <TableBody>
+              {paginatedCampaigns.length > 0 ? (
+                paginatedCampaigns.map((campaign, index) => (
                 <TableRow 
                   key={campaign.id} 
-                  className={cn(
-                    "border-b-[#2A2A2A] hover:bg-[#1A1A1A] transition-colors",
-                    index % 2 === 0 ? "bg-transparent" : "bg-[#161616]"
-                  )}
+                  onClick={() => router.push(`/campaigns/${campaign.id}`)}
+                  className="cursor-pointer hover:bg-[#1A1A1A]/50 border-[#2A2A2A] transition-colors"
                 >
                   <TableCell className="font-medium text-white">{campaign.name}</TableCell>
                   <TableCell>
@@ -171,10 +236,20 @@ export function CampaignsTable() {
                       {campaign.platform}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={cn("rounded-full font-normal", getStatusColor(campaign.status))}>
-                      {campaign.status}
-                    </Badge>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="outline-none focus:outline-none">
+                        <Badge variant="outline" className={cn("rounded-full font-normal hover:opacity-80 cursor-pointer", getStatusColor(campaign.status))}>
+                          {campaign.status}
+                        </Badge>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="bg-[#1A1A1A] border-[#2A2A2A]">
+                        <DropdownMenuItem className="text-white hover:bg-[#2A2A2A] cursor-pointer focus:bg-[#2A2A2A] focus:text-white" onClick={() => handleStatusChange(campaign.id, 'Active')}>Active</DropdownMenuItem>
+                        <DropdownMenuItem className="text-white hover:bg-[#2A2A2A] cursor-pointer focus:bg-[#2A2A2A] focus:text-white" onClick={() => handleStatusChange(campaign.id, 'Paused')}>Paused</DropdownMenuItem>
+                        <DropdownMenuItem className="text-white hover:bg-[#2A2A2A] cursor-pointer focus:bg-[#2A2A2A] focus:text-white" onClick={() => handleStatusChange(campaign.id, 'Completed')}>Completed</DropdownMenuItem>
+                        <DropdownMenuItem className="text-white hover:bg-[#2A2A2A] cursor-pointer focus:bg-[#2A2A2A] focus:text-white" onClick={() => handleStatusChange(campaign.id, 'Draft')}>Draft</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                   <TableCell className="text-gray-300">${campaign.budget.toLocaleString()}</TableCell>
                   <TableCell className="text-gray-300">${campaign.amountSpent.toLocaleString()}</TableCell>
@@ -182,16 +257,24 @@ export function CampaignsTable() {
                     {campaign.roi}x
                   </TableCell>
                   <TableCell className="text-gray-400 text-sm">
-                    {new Date(campaign.startDate).toLocaleDateString()} - {new Date(campaign.endDate).toLocaleDateString()}
+                    {formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-gray-400 hover:text-orange-500 hover:bg-orange-500/10">
                         <Link href={`/campaigns/${campaign.id}/edit`}>
                           <Pencil className="h-4 w-4" />
                         </Link>
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-500/10">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-500/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteId(campaign.id);
+                        }}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -205,15 +288,13 @@ export function CampaignsTable() {
                 </TableCell>
               </TableRow>
             )}
-          </TableBody>
-        </Table>
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
-      {/* Pagination */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-400">
-        <div>
-          Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredCampaigns.length)} of {filteredCampaigns.length}
-        </div>
+      
+      <div className="flex justify-center items-center gap-4 text-sm text-gray-400 mt-4">
         <Pagination>
           <PaginationContent>
             <PaginationItem>
