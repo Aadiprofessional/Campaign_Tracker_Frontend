@@ -98,15 +98,17 @@ This project is configured for deployment on Cloudflare Pages using `@cloudflare
    ```
 
 3. **Deploy**:
-   Connect your repository to Cloudflare Pages and use the following settings:
-   - **Build command**: `npm run pages:build` (or `npx @cloudflare/next-on-pages`)
-   - **Build output directory**: `.vercel/output/static`
-   - **Compatibility flags**: `nodejs_compat`
+    Connect your repository to Cloudflare Pages and use the following settings:
+    - **Build command**: `npm run pages:build` (or `npx @cloudflare/next-on-pages`)
+    - **Build output directory**: `.vercel/output/static`
+    - **Compatibility flags**: `nodejs_compat`
 
-   Alternatively, deploy via CLI:
-   ```bash
-   npm run pages:deploy
-   ```
+    **Important**: Do not use `npm run pages:deploy` as the build command in Cloudflare Dashboard, as it will attempt to deploy again from within the build environment.
+
+    Alternatively, to deploy via CLI from your local machine:
+    ```bash
+    npm run pages:deploy
+    ```
 
    **Note on Telemetry**:
    To disable Next.js telemetry during build, set the environment variable:
