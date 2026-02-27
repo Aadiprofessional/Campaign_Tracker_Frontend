@@ -103,11 +103,11 @@ This project is configured for deployment on Cloudflare Pages using `@cloudflare
     - **Build output directory**: `.vercel/output/static`
     - **Compatibility flags**: `nodejs_compat`
 
-    **Important**: Do not use `npm run pages:deploy` as the build command in Cloudflare Dashboard, as it will attempt to deploy again from within the build environment.
+    **Important**: The build command should *only* build the project. Cloudflare Pages handles the deployment automatically. Do not use `npm run deploy:local` in the dashboard.
 
     Alternatively, to deploy via CLI from your local machine:
     ```bash
-    npm run pages:deploy
+    npm run deploy:local
     ```
 
    **Note on Telemetry**:
