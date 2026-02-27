@@ -28,6 +28,7 @@ import { cn, formatDate } from '@/lib/utils';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { MonthlyPerformanceManager } from './MonthlyPerformanceManager';
+import { ClientOnly } from '@/components/ClientOnly';
 
 interface CampaignDetailProps {
   campaign: Campaign;
@@ -172,7 +173,9 @@ export function CampaignDetail({ campaign, performanceData }: CampaignDetailProp
                 <span className="text-gray-400 text-sm">Remaining</span>
                 <Clock className="h-4 w-4 text-purple-500" />
               </div>
-              <div className="text-2xl font-bold text-white mt-2">{daysRemaining} Days</div>
+              <ClientOnly>
+                <div className="text-2xl font-bold text-white mt-2">{daysRemaining} Days</div>
+              </ClientOnly>
             </CardContent>
           </Card>
         </div>
@@ -184,56 +187,58 @@ export function CampaignDetail({ campaign, performanceData }: CampaignDetailProp
         </CardHeader>
         <CardContent>
           <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorImpressions" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F97316" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#F97316" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#22C55E" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" vertical={false} />
-                <XAxis dataKey="name" stroke="#A1A1AA" tickLine={false} axisLine={false} />
-                <YAxis stroke="#A1A1AA" tickLine={false} axisLine={false} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1A1A1A', 
-                    border: '1px solid #2A2A2A',
-                    borderRadius: '8px',
-                    color: '#FFFFFF'
-                  }}
-                  itemStyle={{ color: '#fff' }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="impressions" 
-                  stroke="#F97316" 
-                  fillOpacity={1} 
-                  fill="url(#colorImpressions)" 
-                  name="Impressions"
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="clicks" 
-                  stroke="#22C55E" 
-                  fillOpacity={1} 
-                  fill="url(#colorClicks)" 
-                  name="Clicks"
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="conversions" 
-                  stroke="#FFFFFF" 
-                  fill="transparent" 
-                  strokeWidth={2}
-                  name="Conversions"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <ClientOnly>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorImpressions" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#F97316" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#F97316" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#22C55E" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" vertical={false} />
+                  <XAxis dataKey="name" stroke="#A1A1AA" tickLine={false} axisLine={false} />
+                  <YAxis stroke="#A1A1AA" tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1A1A1A', 
+                      border: '1px solid #2A2A2A',
+                      borderRadius: '8px',
+                      color: '#FFFFFF'
+                    }}
+                    itemStyle={{ color: '#fff' }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="impressions" 
+                    stroke="#F97316" 
+                    fillOpacity={1} 
+                    fill="url(#colorImpressions)" 
+                    name="Impressions"
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="clicks" 
+                    stroke="#22C55E" 
+                    fillOpacity={1} 
+                    fill="url(#colorClicks)" 
+                    name="Clicks"
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="conversions" 
+                    stroke="#FFFFFF" 
+                    fill="transparent" 
+                    strokeWidth={2}
+                    name="Conversions"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </ClientOnly>
           </div>
         </CardContent>
       </Card>

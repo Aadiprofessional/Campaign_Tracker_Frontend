@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Search, Plus, Menu, Loader2 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { searchCampaigns } from '@/app/actions';
+import { api } from '@/lib/api';
 import { Campaign } from '@/lib/types';
 
 interface TopNavbarProps {
@@ -38,7 +38,7 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
       if (searchTerm.trim().length > 0) {
         setLoading(true);
         try {
-          const data = await searchCampaigns(searchTerm);
+          const data = await api.searchCampaigns(searchTerm);
           setResults(data);
           setShowDropdown(true);
         } catch (error) {

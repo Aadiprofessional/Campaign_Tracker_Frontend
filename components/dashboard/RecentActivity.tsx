@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ClientOnly } from '@/components/ClientOnly';
 import { Campaign } from '@/lib/types';
 import { cn, formatDate } from '@/lib/utils';
 
@@ -40,9 +41,11 @@ export function RecentActivity({ campaigns }: RecentActivityProps) {
                   <p className="text-sm text-white leading-tight">
                     {activity.text}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {activity.timestamp}
-                  </p>
+                  <ClientOnly>
+                    <p className="text-xs text-muted-foreground">
+                      {activity.timestamp}
+                    </p>
+                  </ClientOnly>
                 </div>
               </div>
             ))

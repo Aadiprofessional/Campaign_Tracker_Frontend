@@ -6,7 +6,12 @@ interface PageProps {
   params: { id: string };
 }
 
-export const runtime = 'edge';
+export async function generateStaticParams() {
+  const campaigns = await api.getCampaigns();
+  return campaigns.map((campaign) => ({
+    id: campaign.id,
+  }));
+}
 
 export default async function EditCampaignPage({ params }: PageProps) {
   try {

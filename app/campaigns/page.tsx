@@ -1,10 +1,8 @@
 import { CampaignsTable } from '@/components/campaigns/CampaignsTable';
 import { api } from '@/lib/api';
 
-export const runtime = 'edge';
-
 export default async function CampaignsPage() {
-  const campaigns = await api.getCampaigns();
+  const campaigns = await api.getCampaigns({ cache: 'force-cache' });
 
   return (
     <div className="space-y-6">

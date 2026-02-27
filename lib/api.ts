@@ -98,15 +98,15 @@ const mapInsightsData = (apiInsights: ApiInsightsData): InsightsData => ({
 });
 
 export const api = {
-  getCampaigns: async (): Promise<Campaign[]> => {
-    const res = await fetch(`${API_BASE_URL}/campaigns`, { cache: 'no-store' });
+  getCampaigns: async (init?: RequestInit): Promise<Campaign[]> => {
+    const res = await fetch(`${API_BASE_URL}/campaigns`, { cache: 'no-store', ...init });
     if (!res.ok) throw new Error('Failed to fetch campaigns');
     const data: ApiCampaign[] = await res.json();
     return data.map(mapCampaign);
   },
 
-  getCampaign: async (id: string): Promise<Campaign> => {
-    const res = await fetch(`${API_BASE_URL}/campaigns/${id}`, { cache: 'no-store' });
+  getCampaign: async (id: string, init?: RequestInit): Promise<Campaign> => {
+    const res = await fetch(`${API_BASE_URL}/campaigns/${id}`, { cache: 'no-store', ...init });
     if (!res.ok) throw new Error('Failed to fetch campaign');
     const data: ApiCampaign = await res.json();
     return mapCampaign(data);
@@ -143,16 +143,16 @@ export const api = {
     if (!res.ok) throw new Error('Failed to delete campaign');
   },
 
-  getDashboardStats: async (): Promise<DashboardStats> => {
-    const res = await fetch(`${API_BASE_URL}/dashboard/stats`, { cache: 'no-store' });
+  getDashboardStats: async (init?: RequestInit): Promise<DashboardStats> => {
+    const res = await fetch(`${API_BASE_URL}/dashboard/stats`, { cache: 'no-store', ...init });
     if (!res.ok) throw new Error('Failed to fetch dashboard stats');
     const data: ApiDashboardStats = await res.json();
     return mapDashboardStats(data);
   },
 
-  getPerformanceMetrics: async (): Promise<PerformanceData[]> => {
+  getPerformanceMetrics: async (init?: RequestInit): Promise<PerformanceData[]> => {
     try {
-      const res = await fetch(`${API_BASE_URL}/dashboard/performance`, { cache: 'no-store' });
+      const res = await fetch(`${API_BASE_URL}/dashboard/performance`, { cache: 'no-store', ...init });
       if (!res.ok) {
         return [];
       }
@@ -179,15 +179,15 @@ export const api = {
     }
   },
 
-  getInsights: async (query: string = ''): Promise<InsightsData> => {
-    const res = await fetch(`${API_BASE_URL}/insights/trends/?query=${query}`, { cache: 'no-store' });
+  getInsights: async (query: string = '', init?: RequestInit): Promise<InsightsData> => {
+    const res = await fetch(`${API_BASE_URL}/insights/trends/?query=${query}`, { cache: 'no-store', ...init });
     if (!res.ok) throw new Error('Failed to fetch insights');
     const data: ApiInsightsData = await res.json();
     return mapInsightsData(data);
   },
 
-  getMonthlyPerformance: async (campaignId: string): Promise<MonthlyPerformance[]> => {
-    const res = await fetch(`${API_BASE_URL}/campaigns/${campaignId}/performance`, { cache: 'no-store' });
+  getMonthlyPerformance: async (campaignId: string, init?: RequestInit): Promise<MonthlyPerformance[]> => {
+    const res = await fetch(`${API_BASE_URL}/campaigns/${campaignId}/performance`, { cache: 'no-store', ...init });
     if (!res.ok) {
       if (res.status === 404) return [];
       throw new Error('Failed to fetch monthly performance');
@@ -202,6 +202,25 @@ export const api = {
       spend: item.spend,
       revenue: item.revenue
     }));
+  },
+
+  searchCampaigns: async (query: string): Promise<Campaign[]> => {
+    if (!query || query.trim().length === 0) {
+      return [];
+    }
+    
+    const res = await fetch(`${API_BASE_URL}/campaigns`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch campaigns');
+    const data: ApiCampaign[] = await res.json();
+    const allCampaigns = data.map(mapCampaign);
+    
+    const lowerQuery = query.toLowerCase();
+    return allCampaigns
+      .filter(c => 
+        c.name.toLowerCase().includes(lowerQuery) || 
+        c.platform.toLowerCase().includes(lowerQuery)
+      )
+      .slice(0, 5);
   },
 
   updateMonthlyPerformance: async (campaignId: string, data: MonthlyPerformance[]): Promise<void> => {

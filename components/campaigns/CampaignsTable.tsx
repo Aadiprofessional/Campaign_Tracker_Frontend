@@ -50,6 +50,7 @@ import { useRouter } from 'next/navigation';
 import { Campaign, Platform, Status } from '@/lib/types';
 import { cn, formatDate } from '@/lib/utils';
 import { api } from '@/lib/api';
+import { ClientOnly } from '@/components/ClientOnly';
 import { toast } from "sonner";
 
 interface CampaignsTableProps {
@@ -257,7 +258,9 @@ export function CampaignsTable({ initialCampaigns }: CampaignsTableProps) {
                     {campaign.roi}x
                   </TableCell>
                   <TableCell className="text-gray-400 text-sm">
-                    {formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}
+                    <ClientOnly>
+                      {formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}
+                    </ClientOnly>
                   </TableCell>
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-end gap-2">
