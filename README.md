@@ -114,6 +114,9 @@ This project is configured for deployment on Cloudflare Pages using `@cloudflare
    
    In Cloudflare Pages dashboard: Settings -> Environment Variables -> Add variable.
 
+   **Note on Dependencies**:
+   An `.npmrc` file is included to handle peer dependency resolution between Next.js and Cloudflare adapter. This ensures smooth deployment without version conflicts.
+
 ### Google Cloud Platform (Cloud Run)
 
 You can containerize and deploy this application to Google Cloud Run.
